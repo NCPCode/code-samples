@@ -14,8 +14,7 @@ counter = 0
 
 # this is the "game loop"
 # it will continuously run, doing things every time
-# most applications have this type of infinite loop
-# we'll talk more about on day 4 with pygame
+# we'll talk more about this on day 4 with pygame
 while True:
   player.forward(1)
   # make sure the player is in bounds
