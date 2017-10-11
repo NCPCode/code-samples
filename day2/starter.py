@@ -1,5 +1,5 @@
 print("This can convert either pounds to kilograms or kilograms to pounds.")
-convert_to = input("Do you have want to convert to pounds or kilograms?")
+convert_to = input("Do you have want to convert to pounds or kilograms? ")
 
 weight = int(input("Input weight (without unit): "))
 
