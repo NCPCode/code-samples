@@ -8,3 +8,30 @@
 # What is favorite animal #2? (dolphin)
 # What is favorite animal #3? (kangaroo)
 # You like dogs, dolphins, and kangaroos!
+
+number = int(input('how many animals? '))
+
+results = []
+
+for i in range(number):
+  answer = input('what animal? ')
+
+  results.append(answer)
+
+
+for x in range(10):
+  if x == 5:
+    break
+
+
+
+
+
+
+
+
+
+
+
+
+
