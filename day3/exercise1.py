@@ -12,16 +12,6 @@ print(test_scores)
 # people = ["matthew", "aayushi", "molly", "sparks"]
 # test_scores = [93]
 
-dogs.append('pixel')
-dogs.append('byte')
-
-people.remove('anton')
-people.remove('michael')
-people.remove('justin')
-
-test_scores = test_scores[:1]
-
-
 # now let's check!
 
 if dogs == ["jack", "chrissy", "pixel", "byte"]:
