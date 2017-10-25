@@ -7,11 +7,11 @@ def absolute(x):
   # remember to make return your answer!
 
 
-# tests!  
-  
+# tests!
+
 print(average([1, 2, 3, 4]) # should print 2.5
-print(average([0, 2, 4])    # should print 2 
-   
+print(average([0, 2, 4])    # should print 2
+
 print(absolute(5))          # should print 5
 print(absolute(-7))         # should print 7
 print(absolute(0))          # should print 0
