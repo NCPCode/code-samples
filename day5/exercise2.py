@@ -1,3 +1,6 @@
+# modify the Player class so that, instead of having the player just stay at the edge if they
+# try and move past it, they'll appear at the other side (like in PacMan)
+
 import pygame
 
 
