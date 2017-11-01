@@ -30,20 +30,26 @@ class Player:
     self.rect = Rect(coords, size)
     self.speed = speed
     self.controls = controls
+    self.reset()
 
-  def move(self, keys):
+  def process_key_change(self, key, value):
+    for direction in self.controls:
+      if self.controls[direction] == key:
+        self.directions[direction] = value
+
+  def move(self):
     speed = self.speed
-    if ((keys[self.controls['up']] or keys[self.controls['down']]) and
-        (keys[self.controls['left']] or keys[self.controls['right']])):
+    if ((self.controls['up'] or self.controls['down']) and
+        (self.controls['left'] or self.controls['right'])):
       speed = self.speed * 2 ** .5
 
-    if keys[self.controls['up']]:
+    if self.directions['up']:
       self.rect.coords[1] -= speed
-    if keys[self.controls['down']]:
+    elif self.directions['down']:
       self.rect.coords[1] += speed
-    if keys[self.controls['left']]:
+    if self.directions['left']:
       self.rect.coords[0] -= speed
-    if keys[self.controls['right']]:
+    elif self.directions['right']:
       self.rect.coords[0] += speed
 
   def draw(self, window):
@@ -56,11 +62,10 @@ class Player:
       elif (self.rect.coords[i] >= screen_size[i] - self.rect.size[i]):
         self.rect.coords[i] = screen_size[i] - self.rect.size[i]
 
-  def collided(self, rect):
-    return self.rect.collided(rect)
-
   def reset(self):
     self.rect.coords = list(self.initial_coords)
+    self.directions = {'right': False, 'left': False, 'up': False, 'down': False}
+
 
 WINDOW_SIZE = [100, 100]
 PLAYER_SIZE = [10, 10]
@@ -97,19 +102,29 @@ clock = pygame.time.Clock()
 
 
 while True:
+  # INPUT
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       exit()
 
-  keys = pygame.key.get_pressed()
+    if event.type == pygame.KEYDOWN:
+      for player in players:
+        player.process_key_change(event.key, True)
+
+    elif event.type == pygame.KEYUP:
+      for player in players:
+        player.process_key_change(event.key, False)
+
+  # PROCESSING
   for player in players:
-    player.move(keys)
+    player.move()
     player.check_boundaries(WINDOW_SIZE)
 
   if Rect.collided_list(list(map(lambda player: player.rect, players))):
     for player in players:
       player.reset()
 
+  # DISPLAY
   window.fill(pygame.Color('white'))
 
   for player in players:
