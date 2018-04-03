@@ -15,7 +15,7 @@ function update1(robot, x, y)
  
  if wget(x - 1, y) == 0 then
   robot.instr = 0
-  debug = hget(x-1, y)
+  debug = hget(x - 1, y)
  else
   debug = nil
  end
