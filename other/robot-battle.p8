@@ -3,15 +3,26 @@ version 16
 __lua__
 -- team 0
 
-function update0(robot, x, y)
-
+function update0(x, y)
+ robot = {
+  dirc = 1,
+  instr = 1,
+ }
+ 
+ if wget(x + 1, y) == 1 then
+  robot.instr = 0
+ end
+ 
+ return robot
 end
 -->8
 -- team 1
 
-function update1(robot, x, y)
- robot.dirc = 0
- robot.instr = 1
+function update1(x, y)
+ robot = {
+  dirc = 0,
+  instr = 1,
+ }
  
  if wget(x - 1, y) == 0 then
   robot.instr = 0
@@ -20,6 +31,7 @@ function update1(robot, x, y)
   debug = nil
  end
  
+ return robot
 end
 -->8
 -- information
@@ -30,6 +42,22 @@ end
 
  your goal: eliminate all
  enemy robots! 
+--]]
+
+--[[
+ every 10 turns, 10 robots will
+ randomly spawn in the arena.
+ 
+ robots will not spawn on top of
+ or close to walls, but robots
+ may spawn on top of robots.
+ if a robot spawns on top of a
+ robot, it will destroy the
+ robot it spawns on top of.
+ 
+ robots from team0 spawn on
+ the left side, and robots from
+ team 1 spawn on the right side.
 --]]
 
 --[[
@@ -110,9 +138,10 @@ end
  tiles in groups 0 and 1 also
  have robots
  robots have instr and dirc.
- instr is either 0 or 1
+ instr is either 0, 1 or 2
  if it's 0, robot will attack
  if it's 1, robot will move
+ if it's 2, robot will wait
  dirc stores direction to act
  0 -> left
  1 -> right
@@ -135,6 +164,27 @@ follow if possible.
 -- implementation
 
 -- warning: do not touch!
+
+function _init()
+ arena = {
+ 	init = arena1_init,
+  spawn = arena1_spawn,
+  length = 100,
+ 	winner = most_bots_wins
+ }
+ 
+ for y=0,7 do
+  for x=0,7 do
+   sset(x, y, 0)
+  end
+ end
+
+ team0 = {}
+ team1 = {}
+	
+	arena.init()
+	debug = nil
+end
 
 function make_robot(x, y)
  local robot = {}
@@ -160,20 +210,6 @@ function make_tile(x, y, group)
  elseif group == 3 then
   sset(x, y, 0)
  end
-end
-
-function _init()
- for y=0,7 do
-  for x=0,7 do
-   sset(x, y, 0)
-  end
- end
-
- team0 = {}
- team1 = {}
-
-	arena1()
-	debug = nil
 end
 
 function el(x, tab)
@@ -294,8 +330,13 @@ function hit(x, y)
 end
 
 local delay = 10
+local turn_number = 0
 local auto = false
 function _update()
+ if turn_number >= arena.length then
+  return
+ end
+ 
  if auto then
   if btnp(4) then
    auto = false
@@ -314,19 +355,35 @@ function _update()
    return
   end
  end
-
+ 
+ arena.spawn(turn_number)
+ 
  for rob in all(team0) do
-  update0(rob.data, rob.x, rob.y)
+  rob.data = update0(rob.x, rob.y)
   adjust(rob, 0)
  end
  
  for rob in all(team1) do
-  update1(rob.data, rob.x, rob.y)
+  rob.data = update1(rob.x, rob.y)
   adjust(rob, 1)
  end
+ 
+ turn_number += 1
 end
 
+local win_msg = false
 function _draw()
+	
+	if turn_number >= arena.length then
+	 if win_msg then
+	  return
+	 end
+	 print("game finished!", 60, 60)
+	 print(arena.winner(), 60, 66)
+	 win_msg = true
+	 return
+	end
+	
 	cls()
 	for i=0, 255 do
 	 spr(i, (i % 16) * 8, flr(i / 16) * 8)  
@@ -341,20 +398,93 @@ end
 
 -- don't touch!
 
-function arena1()
+function set_line(x, s, f, c)
+ for y=s,f do
+  sset(x, y, c)
+ end
+end
+
+function cprog_bottom()
+ set_line(0, 121, 127, 11)
+ set_line(1, 121, 127, 3)
+ set_line(2, 121, 127, 2)
+ set_line(3, 121, 127, 1)
+ set_line(4, 121, 127, 13)
+ set_line(5, 121, 127, 6)
+ set_line(6, 121, 127, 15)
+ 
+ set_line(121, 121, 127, 4)
+ set_line(122, 121, 127, 5)
+ set_line(123, 121, 127, 8)
+ set_line(124, 121, 127, 14)
+ set_line(125, 121, 127, 9)
+ set_line(126, 121, 127, 10)
+ set_line(127, 121, 127, 12)
+end
+
+function arena1_init()
 	for x=0, 127 do
 	 make_tile(x, 0, 2)
-	 make_tile(x, 127, 2)
+	 make_tile(x, 120, 2)
 	end
  
- for y=0, 127 do
+ for y=0, 120 do
   make_tile(0, y, 2)
   make_tile(127, y, 2)
  end
  
  make_tile(10, 10, 0)
  make_tile(15, 10, 1)
+ 
+ for y=15, 90 do
+  make_tile(45, y, 2)
+ end
+ 
+ cprog_bottom()
+end
 
+function arena1_spawn(turn)
+ if turn % 10 != 0 or turn == 0 then
+  return
+ end
+
+ local quant = flr(rnd(5))
+ for i=0, 1 do
+  for counter=1, quant do
+   local x = 1 + flr(rnd(63)) + 63*i
+   local y = flr(rnd(119)) + 1
+   
+   if wget(x, y) == 2 then
+    counter -= 1
+    -- no continues :(
+   else
+    local robby = make_robot(x, y)
+    
+    if wget(x, y) < 2 then
+     for count=1, hget(x, y) do
+      hit(x, y)
+     end
+    end
+    
+    make_tile(x, y, i)
+    local team = team0
+    if i == 1 then
+     team = team1
+    end
+    add(team, robby)
+   end
+  end
+ end
+end
+
+function most_bots_wins()
+ if #team0 > #team1 then
+  return "team 0 wins!"
+ elseif #team1 > #team0 then
+  return "team 1 wins!"
+ else
+  return "tie game."
+ end
 end
 __label__
 88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
